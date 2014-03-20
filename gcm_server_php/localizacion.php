@@ -1,13 +1,16 @@
 <?php
-if (isset($_POST["latitud"]) && isset($_POST["longitud"])) {
-    $latitud = $_POST["latitud"];
-    $longitud = $_POST["longitud"];
+var_dump($_POST);
+if (isset($_POST['latitud']) && isset($_POST['longitud']) && isset($_POST['placas'])) {//Will yo lo puse el de Placas
+    $latitud = $_POST['latitud'];
+    $longitud = $_POST['longitud'];
+	$placas = $_POST['placas'];//Will yo lo puse
     include_once './db_functions.php';
     include_once './GCM.php';
     
     $db = new DB_Functions();
     $gcm = new GCM();
-    $res = $db->AltaBus($latitud, $longitud);
+	
+    $res = $db->AltaBus($latitud, $longitud, $placas);//Will yo puse 
 
     $consulta= $db->AnalisisPeriferias();
 
@@ -65,5 +68,18 @@ if (isset($_POST["latitud"]) && isset($_POST["longitud"])) {
     }
 
 }else{
+//Will
+	if (isset($_POST['ruta']) && isset($_POST['placas']) && isset($_POST['nombre']) && isset($_POST['apellido'])){//Will yo lo puse
+		$id_ruta = $_POST['ruta'];
+		$placas = $_POST['placas'];
+		$nombre = $_POST['nombre'];
+		$apellido = $_POST['apellido'];
+		include_once './db_functions.php';
+		
+		$db = new DB_Functions();
+		
+		
+		$res = $db->RegistraBus($nombre, $apellido, $placas, $id_ruta);//Will yo puse 
+	}
 }
 ?>
