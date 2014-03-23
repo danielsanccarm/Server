@@ -2,18 +2,33 @@
     include_once 'db_functions.php';
     $db = new DB_Functions();
     if(isset($_POST)){
-        //var_dump($_POST);
+        //json_encode(var_dump($_POST));
         //exit(0);
-        $insercion = explode(",",$_POST['parada']);
-        //$insercion = json_decode($_POST['parada']);
-        //$lista = new Array();
-        $i=0;
+        //$insercion = explode(",",$_POST['parada']);
+        // Accedo al RAW de datos directamente
+        /*
+        $datos =json_decode( file_get_contents("php://input"),true);
+        print_r($datos);
+        echo $datos["parada"];
+        */
         
-        foreach($insercion as $conteo){
+        //Accedemos al RAW de datos directamente
+        $datos= json_decode(file_get_contents("php://input"),true);
+        //Generamos el arreglo apartir perteneciente a parada dentro del json
+        $insercion=json_decode($datos['parada'],true);
+        if (sizeof($insercion) == 0)
+            echo "aun no se puede";
+        //print_r($insercion);
+        
+        $i=0;
+        //print_r($insercion['parada']);
+        
+        $lista = array();       //Array donde se almacenaran las paradas
+        
+        //if (is_array($insercion['parada']))
+        foreach($insercion as $conteo){             //Recorremos las rutas solicitadas
                $resultado = $db->Descarga($conteo);//$conteo
                 while($fila  = mysql_fetch_row($resultado)){
-                    //$lista = array(array($fila[0],$fila[1],$fila[2],$fila[3],$fila[4]));
-                    //array_push($lista[],$fila[0],$fila[1],$fila[2],$fila[3]);
                     $lista[$i]=array("ID_Estacion"=>$fila[0], "Ruta"=>$fila[1], "Nombre"=>$fila[2], "ID_Ruta"=>$fila[3], "Laitud_E"=>$fila[4], "Longitud_E"=>$fila[5]);
                     $i++;
             }
@@ -21,8 +36,10 @@
         }
         //$lista=array_map('htmlentities',$lista);
         //$temp= html_entity_decode(json_encode($lista)); //$lista
-        $temp= codificar(json_encode($lista));
-    echo  $temp;
+
+            $temp= codificar(json_encode($lista));
+            echo  $temp;
+
     }else{
         echo "Error no se recibio el dato";
     }

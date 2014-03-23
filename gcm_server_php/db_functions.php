@@ -161,6 +161,25 @@ class DB_Functions {
                                                 AND ID_User = (Select id from gcm_users where gcm_regid='".$id_gcm."'));");
         return $result;
     }
+    
+    
+    public function ObtenerUnidadesBus(){
+        $result= mysql_query("Select * from Unidades;");
+        return $result;
+    
+    }
+    
+    public function ObtenerUsuarios(){
+        $result = mysql_query("Select * from gcm_users;");
+        return $result;
+    
+    } 
+
+    public function ObtenerRelacionUsuarioEstacionUnidad(){
+        $result= mysql_query("Select * from UserStUnit;");
+        return $result;
+    
+    }
 
 
 }
