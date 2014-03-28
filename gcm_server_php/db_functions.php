@@ -82,16 +82,16 @@ class DB_Functions {
         //$result =mysql_query("Insert INTO Unidades(Latitud, Longitud) values('$latitud','$longitud')");
 		
         //$id = mysql_insert_id(); // last inserted id
-        $result= mysql_query("UPDATE Unidades set Latitud='$latitud', Longitud='$longitud' where Placas='$identificador';"); //where id_Unidad = $identificador
+        $result= mysql_query("UPDATE Unidades set Latitud='$latitud', Longitud='$longitud' where Placas='".$identificador."';"); //where id_Unidad = $identificador
         //$result= mysql_query("Insert INTO Unidades (id_Unidad,Latitud, Longitud) values('$id','$latitud','$longitud') on duplicate key update Latitud='$latitud', Longitud='$longitud';");
         // check for successful store
         if ($result) {
             // get user details
             $id = mysql_insert_id(); // last inserted id
-            $result = mysql_query("SELECT * FROM Unidades WHERE id_Unidad = '$id") or die(mysql_error());
+            $result = mysql_query("SELECT * FROM Unidades WHERE id_Unidad = '$id';") or die(mysql_error());
             // return user details
             if (mysql_num_rows($result) > 0) {
-                return mysql_fetch_array($result);
+                return $result;    //mysql_fetch_array()
             } else {
                 return false;
             }
@@ -108,7 +108,7 @@ class DB_Functions {
 		
 			if (mysql_num_rows($existentes) >= 1){
 				
-				$result = mysql_query("UPDATE Unidades SET Nombres='$nombre', Apellidos='$apellido' WHERE Placas ='$placas';");
+				$result = mysql_query("UPDATE Unidades SET Nombres='$nombre', Apellidos='$apellido', ID_Ruta='$id_ruta' WHERE Placas ='$placas';");
 			
 			}
 			else{
@@ -131,17 +131,43 @@ class DB_Functions {
 
     }
     
-    public function AnalisisPeriferias(){
-           $result = mysql_query("Select ID_Periferia, Latitud_P, Longitud_P from Periferia where ID_Estacion='1'");
+    public function AnalisisPeriferias($estacion){
+		   
+           $result = mysql_query("Select ID_Periferia, Latitud_P, Longitud_P from Periferia where ID_Estacion='$estacion';");
            return $result;
     }
+	/*public function AnalisisPeriferias2($placas){
+		$variable = mysql_query("SELECT ID_ruta FROM Unidades WHERE Placas = '$placas';");
+		$count = 1;
+		while ($ruta = mysql_fetch_array($variable)){
+			$result = mysql_query("Select ID_Estacion from Estaciones where ID_Ruta = '$ruta['$count']';);
+			//$count++;
+		}
+		return $result;
+		
+	}*/
+	 public function ObtenerEstaciones_de_Placas($placas){
+	       $idestacion = mysql_query("Select Estaciones.ID_Estacion from Estaciones where ID_Ruta =(Select Unidades.ID_Ruta from Unidades where Placas='".$placas."');");
+           //$result = mysql_query("Select ID_Periferia, Latitud_P, Longitud_P from Periferia where ID_Estacion='$idestacion'");
+           //return $result;
+		   return $idestacion;
+    }
     
-    public function GCM_IDS_Estacion(){
-           $gcm_ids=mysql_query("Select gcm_regid from gcm_users, UserStUnit, Estaciones where gcm_users.id= UserStUnit.ID_User and UserStUnit.ID_Estacion = Estaciones.ID_Estacion;");
+	//Obtenemos los gcm_ids pertenecientes ligadas a la estacion elegida en UserStUnit
+	public function GCM_IDS_Estacion($estacion){
+           $gcm_ids=mysql_query("Select ID_UserStUnit, gcm_regid,Estaciones.Nombre from UserStUnit inner join Estaciones on UserStUnit.ID_Estacion=Estaciones.ID_Estacion inner join gcm_users on UserStUnit.ID_User=gcm_users.id where UserStUnit.ID_Estacion='$estacion';");	//UserStUnit.ID_Estacion = Estaciones.ID_Estacion
            return $gcm_ids;
     }
-
+   // public function ActualizaApuntador($id_UserStUnit){
+	//		$actualiza = mysql_query("UPDATE UserStUnit SET Apuntador = 0 WHERE ID_UserStUnit = '$id_UserStUnit';");
+		//	return $actualiza;
+	//}
     public function Descarga($conteo){
+        /*
+        $result = mysql_query("Insert Into UserStUnit (Apuntador,ID_Estacion,ID_User)  Select 1,'.$estacion.',('.$select_id_usuario.') 
+                                                from dual where NOT exists( Select ID_UserStUnit from UserStUnit where ID_Estacion='.$estacion.' 
+                                                AND ID_User = ('.$select_id_usuario.'));");
+           */                                     
            mysql_query('SET CHARACTER SET utf8');
             $descarga = mysql_query("Select  Estaciones.ID_Estacion, Rutas.Ruta, Estaciones.Nombre, Estaciones.ID_Ruta, Estaciones.Latitud_E, Estaciones.Longitud_E from Estaciones inner join Rutas on Rutas.ID_Ruta = Estaciones.ID_Ruta where Estaciones.ID_Ruta =".$conteo.";");  //$conteo
             
@@ -150,15 +176,10 @@ class DB_Functions {
     
     public function RegistrarSolicitudNotificacion($estacion, $id_gcm){
     
-        /*
-        $result = mysql_query("Insert Into UserStUnit (Apuntador,ID_Estacion,ID_User)  Select 1,'.$estacion.',('.$select_id_usuario.') 
-                                                from dual where NOT exists( Select ID_UserStUnit from UserStUnit where ID_Estacion='.$estacion.' 
-                                                AND ID_User = ('.$select_id_usuario.'));");
-           */                                     
          $result= mysql_query("Insert Into UserStUnit (Apuntador,ID_Estacion,ID_User)  Select 1,'$estacion',(Select id from gcm_users 
                                             where gcm_regid='".$id_gcm."')
                                             from dual where NOT exists( Select ID_UserStUnit from UserStUnit where ID_Estacion='$estacion' 
-                                                AND ID_User = (Select id from gcm_users where gcm_regid='".$id_gcm."'));");
+                                            AND ID_User = (Select id from gcm_users where gcm_regid='".$id_gcm."'));");
         return $result;
     }
     
@@ -180,6 +201,21 @@ class DB_Functions {
         return $result;
     
     }
+
+    public function ObtenerRutas(){
+        $result= mysql_query("Select ID_Ruta, Nombre, Origen, Destino from Rutas;");
+        return $result;
+    
+}
+
+public function ObtenerEstaciones(){
+        $result= mysql_query("Select * from Estaciones;");
+        return $result;
+    
+    }
+
+
+
 
 
 }
